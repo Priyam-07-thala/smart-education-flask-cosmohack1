@@ -170,6 +170,11 @@ Average Score = (Attendance + Marks + Assignments + Behavior) / 4
 < 50  → High Risk
 ```
 
+## DataSet Used to train the ML Model
+https://www.kaggle.com/datasets/spscientist/students-performance-in-exams?
+
+### we have used this kaggle DataSet to train our model by feature engineering with Ml-rule based logic
+
 ## 🌐 Free Deployment Options
 ```
 You can deploy this project for free using:
@@ -208,6 +213,14 @@ Create a new branch
 Commit changes
 
 Open a Pull Request
+
+## 📊 Can Improve to existing project
+
+- Passwords not hashed
+- SQLite instead of production DB
+- Mobile responsiveness
+- More interactive charts
+
 
 ## 🚀 Future Enhancements
 
