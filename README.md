@@ -13,8 +13,8 @@ password:student_23
 these are samples data which we have given
 
 You can also signup but remember the studentID.
-### .csv file format -
-student_id,name,attendance,avg_marks,assignment_completion,behavior_score
+## .csv file format -
+### student_id,name,attendance,avg_marks,assignment_completion,behavior_score
 
 #### Remember the studentId as when signup in the site you have give that studentId which was given by the teacher
 
