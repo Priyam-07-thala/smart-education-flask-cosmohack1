@@ -1,3 +1,29 @@
+# Live Website
+Live URL: https://student-at-risk-prediction.onrender.com
+
+## How to run the website
+### for teacher login: 
+username: teacher_1
+password: teacher_1
+
+### for student login
+username:student_23
+password:student_23
+
+these are samples data which we have given
+
+You can also signup but remember the studentID.
+### .csv file format -
+student_id,name,attendance,avg_marks,assignment_completion,behavior_score
+
+#### Remember the studentId as when signup in the site you have give that studentId which was given by the teacher
+
+#### 1. attendance,avg_marks,assignment_completion- range is (0,100)
+#### 2. behavior_score- range is (0,10)
+
+
+
+
 # 🎓 Smart Education Model (Flask-Based Web App)
 
 A **Smart Education Model** built using **Flask**, designed to help teachers monitor student performance and predict academic risk based on multiple parameters such as attendance, marks, assignments, and behavior.
