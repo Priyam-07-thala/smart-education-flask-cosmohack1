@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+{% set high_risk_count = students | selectattr(6, 'equalto', 'High') | list | length %}
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Teacher Dashboard</title>
+
+<style>
+:root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #111;
+    --primary: #2563eb;
+    --danger: #dc2626;
+    --warning: #f59e0b;
+    --success: #16a34a;
+}
+
+body.dark {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #000000;
+    --primary: #38bdf8;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background:
+        linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)),
+        url("{{ url_for('static', filename='images/teacher_bg.jpg') }}");
+    background-size: cover;
+    background-attachment: fixed;
+    color: var(--text);
+}
+
+/* NAVBAR */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--primary);
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+}
+
+.nav-actions button,
+.nav-actions a {
+    margin-left: 10px;
+    padding: 7px 14px;
+    border: none;
+    cursor: pointer;
+    background: white;
+    color: var(--primary);
+    border-radius: 6px;
+    font-weight: bold;
+    transition: 0.25s;
+}
+
+.nav-actions button:hover,
+.nav-actions a:hover {
+    transform: translateY(-2px);
+}
+
+/* LAYOUT */
+.container {
+    max-width: 1150px;
+    margin: 30px auto;
+}
+
+.card {
+    background: rgba(255,255,255,0.95);
+    padding: 25px;
+    border-radius: 14px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    margin-bottom: 30px;
+    animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(10px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+h3 {
+    text-align: center;
+    margin-top: 0;
+}
+
+/* UPLOAD */
+form {
+    text-align: center;
+    border: 2px dashed var(--primary);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+button {
+    background: var(--primary);
+    color: white;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* DRAG & DROP */
+#drop-zone {
+    margin-top: 20px;
+    padding: 40px;
+    border: 2px dashed var(--primary);
+    text-align: center;
+    border-radius: 12px;
+    background: #e5ecf6;
+    transition: 0.3s;
+}
+
+#drop-zone.dragover {
+    background: #c7d7ff;
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th {
+    background: var(--primary);
+    color: white;
+    padding: 12px;
+}
+
+td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+tr[data-risk] {
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+tr[data-risk]:hover {
+    background: #eef4ff;
+    transform: scale(1.01);
+}
+
+/* RISK BADGES */
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: white;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.low { background: var(--success); }
+.medium { background: var(--warning); }
+.high { background: var(--danger); }
+
+/* MODAL */
+#highRiskModal {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+}
+
+.modal-box {
+    background:#7f1d1d;
+    max-width:600px;
+    margin:80px auto;
+    padding:25px;
+    border-radius:14px;
+    color:white;
+}
+
+.modal-box ul li {
+    margin:10px 0;
+}
+
+/* STATUS */
+#status {
+    text-align:center;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+    <h2>📊 Smart Education — Teacher</h2>
+    <div class="nav-actions">
+        {% if high_risk_count > 0 %}
+        <button onclick="showHighRisk()" style="background:#dc2626;color:white;">
+            🚨 High Risk ({{ high_risk_count }})
+        </button>
+        {% endif %}
+        <button onclick="toggleTheme()">🌙</button>
+        <a href="/logout">Logout</a>
+    </div>
+</div>
+
+<!-- HIGH RISK MODAL -->
+<div id="highRiskModal">
+    <div class="modal-box">
+        <h3>🚨 High Risk Students</h3>
+        <ul id="highRiskList"></ul>
+        <button onclick="closeHighRisk()">Close</button>
+    </div>
+</div>
+
+<div class="container">
+
+<div class="card">
+<h3>Upload Student CSV</h3>
+<form action="/upload_csv" method="POST" enctype="multipart/form-data">
+    
+<hr>
+<form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" id="fileInput" name="file" accept=".csv" hidden>
+    <div id="drop-zone">
+    📂 Drag & Drop CSV here or Click
+</div>
+<p id="status"></p>
+</form>
+
+
+
+<p id="status"></p>
+
+
+<div class="card">
+<h3>Students Overview</h3>
+<table>
+<tr>
+<th>ID</th><th>Name</th><th>Attendance</th><th>Marks</th>
+<th>Assignments</th><th>Behavior</th><th>Risk</th>
+</tr>
+
+{% for s in students %}
+<tr data-risk="{{ s[6] }}"
+onclick="window.location='/student_report/{{ s[0] }}'">
+<td>{{ s[0] }}</td>
+<td>{{ s[1] }}</td>
+<td>{{ s[2] }}%</td>
+<td>{{ s[3] }}%</td>
+<td>{{ s[4] }}%</td>
+<td>{{ s[5] }}%</td>
+<td>
+<span class="badge
+{% if s[6]=='Low' %}low
+{% elif s[6]=='Medium' %}medium
+{% else %}high{% endif %}">
+{{ s[6] }}
+</span>
+</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+</div>
+
+<script>
+function toggleTheme(){
+document.body.classList.toggle("dark");
+localStorage.setItem("theme",
+document.body.classList.contains("dark")?"dark":"light");
+}
+if(localStorage.getItem("theme")==="dark"){
+document.body.classList.add("dark");
+}
+
+function showHighRisk(){
+const rows=document.querySelectorAll("tr[data-risk='High']");
+const list=document.getElementById("highRiskList");
+list.innerHTML="";
+rows.forEach(r=>{
+const id=r.children[0].innerText;
+const name=r.children[1].innerText;
+list.innerHTML+=`
+<li>
+<a href="/student_report/${id}" style="color:#fde68a;">
+<b>${id}</b> - ${name}
+</a>
+</li>`;
+});
+document.getElementById("highRiskModal").style.display="block";
+}
+function closeHighRisk(){
+document.getElementById("highRiskModal").style.display="none";
+}
+</script>
+<script src="{{ url_for('static', filename='js/dragdrop.js') }}"></script>
+
+</body>
+</html>

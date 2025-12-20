@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Select Role</title>
+
+    <style>
+        :root {
+            --bg: #f4f6fb;
+            --card: #ffffff;
+            --text: #111;
+            --primary: #2563eb;
+        }
+
+        body.dark {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --primary: #38bdf8;
+        }
+
+       body {
+    background:
+        linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
+        url("{{ url_for('static', filename='images/role_bg.jpg') }}");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+        .card {
+            background: var(--card);
+            padding: 40px;
+            width: 360px;
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+        }
+
+        h2 {
+            margin-bottom: 25px;
+        }
+
+        .role-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: var(--primary);
+            color: white;
+            transition: transform 0.2s;
+        }
+
+        .role-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .actions {
+            margin-top: 20px;
+        }
+
+        .actions a {
+            display: inline-block;
+            margin: 8px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .theme-btn {
+            margin-top: 20px;
+            background: none;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2>Select Your Role</h2>
+
+    <!-- ROLE SELECTION -->
+    <form method="POST" action="/select_role">
+        <button class="role-btn" name="role" value="teacher">👩‍🏫 Teacher</button>
+        <button class="role-btn" name="role" value="student">🎓 Student</button>
+    </form>
+
+    <!-- LOGIN / SIGNUP -->
+    <div class="actions">
+        <a href="/login">Login</a> |
+        <a href="/signup">Sign Up</a>
+    </div>
+
+    <!-- DARK MODE -->
+    <button class="theme-btn" onclick="toggleTheme()">🌙 Toggle Theme</button>
+</div>
+
+<script>
+function toggleTheme() {
+    document.body.classList.toggle("dark");
+    localStorage.setItem("theme",
+        document.body.classList.contains("dark") ? "dark" : "light"
+    );
+}
+
+if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark");
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,103 @@
+:root {
+    --bg: #f5f7fb;
+    --card: #ffffff;
+    --text: #000;
+    --nav: #1e293b;
+}
+
+body.dark {
+    --bg: #0f172a;
+    --card: #ffffff;
+    --text: #f8fafc;
+    --nav: #020617;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* NAVBAR */
+.navbar {
+    background: var(--nav);
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-actions button,
+.nav-actions a {
+    background: #5676bb;
+    border: none;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 30px auto;
+    background: var(--card);
+    padding: 25px;
+    border-radius: 10px;
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #64748b;
+}
+
+th {
+    background: #334155;
+    color: white;
+}
+
+/* RISK */
+.low { color: #22c55e; font-weight: bold; }
+.medium { color: #facc15; font-weight: bold; }
+.high { color: #ef4444; font-weight: bold; }
+
+/* DROP ZONE */
+.drop-zone {
+    border: 2px dashed #64748b;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+    cursor: pointer;
+}
+
+.drop-zone.dragover {
+    background: #1e40af;
+}
+/* ---------- AUTH BACKGROUND ---------- */
+.auth-bg {
+    height: 100vh;
+    background: linear-gradient(135deg, #2563eb, #1e3a8a);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

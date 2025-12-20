@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ role|capitalize }} Signup</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        body {
+    background:
+        linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
+        url("{{ url_for('static', filename='images/signup_bg.jpg') }}");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+        .auth-bg {
+            height: 100vh;
+            background: linear-gradient(rgba(37,99,235,0.7), rgba(37,99,235,0.7)),
+        url("{{ url_for('static', filename='images/login_bg.jpg') }}");
+    background-size: cover;
+    background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .auth-card {
+            background: #ffffff;
+            padding: 40px;
+            width: 360px;
+            border-radius: 14px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .auth-card h2 {
+            margin-bottom: 25px;
+        }
+
+        .auth-card form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .auth-card input {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+
+        .auth-card button {
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .auth-links {
+            margin-top: 18px;
+        }
+
+        .auth-links a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="auth-bg">
+
+<div class="auth-card">
+    <h2>{{ role|capitalize }} Signup</h2>
+
+    <form method="POST">
+        <input name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+
+        {% if role == "student" %}
+        <input name="student_id" placeholder="Student ID" required>
+        {% endif %}
+
+        <button type="submit">Signup</button>
+    </form>
+
+    <div class="auth-links">
+        <a href="/login">Login</a>
+    </div>
+</div>
+
+</body>
+</html>
