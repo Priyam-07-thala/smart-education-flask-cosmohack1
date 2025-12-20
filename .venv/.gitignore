@@ -1,0 +1,9 @@
+# Python virtual environment
+.venv/
+
+# Database (recommended)
+backend/database.db
+
+# Python cache
+__pycache__/
+*.pyc
