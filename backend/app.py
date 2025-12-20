@@ -88,6 +88,31 @@ def logout():
     session.clear()
     return redirect("/")
 
+# ---------- SIGNUP ----------
+@app.route("/signup/<role>", methods=["GET", "POST"])
+def signup(role):
+    if request.method == "POST":
+        u = request.form["username"]
+        p = request.form["password"]
+        sid = request.form.get("student_id")
+
+        try:
+            conn = get_db()
+            conn.execute(
+                "INSERT INTO users (username, password, role, student_id) VALUES (?, ?, ?, ?)",
+                (u, p, role, sid if role == "student" else None)
+            )
+            conn.commit()
+            conn.close()
+
+            flash("Signup successful. Please login.")
+            return redirect(f"/login/{role}")
+
+        except sqlite3.IntegrityError:
+            flash("Username already exists")
+
+    return render_template("signup.html", role=role)
+
 # ---------- TEACHER ----------
 @app.route("/teacher")
 def teacher_dashboard():
