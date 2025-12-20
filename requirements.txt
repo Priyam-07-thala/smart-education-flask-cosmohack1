@@ -1,7 +1,5 @@
-flask
-pandas
-matplotlib
-sqlite3
-joblib
 Flask==2.3.3
 gunicorn==21.2.0
+pandas
+numpy
+scikit-learn
