@@ -1,125 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Select Role</title>
+<meta charset="UTF-8">
+<title>Select Role</title>
 
-    <style>
-        :root {
-            --bg: #f4f6fb;
-            --card: #ffffff;
-            --text: #111;
-            --primary: #2563eb;
-        }
-
-        body.dark {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --text: #f8fafc;
-            --primary: #38bdf8;
-        }
-
-       body {
-    background:
-        linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
-        url("{{ url_for('static', filename='images/role_bg.jpg') }}");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
+<style>
+:root{
+   --primary:#2563eb;
+   --primary-dark:#1e3a8a;
+   --white:#fff;
 }
 
-        .card {
-            background: var(--card);
-            padding: 40px;
-            width: 360px;
-            text-align: center;
-            border-radius: 12px;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-            position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-        }
+/* ===== PAGE ===== */
+body{
+   margin:0;
+   font-family:"Segoe UI", Arial;
+   color:white;
 
-        h2 {
-            margin-bottom: 25px;
-        }
+   background:
+      linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35)),
+      url("{{ url_for('static', filename='images/role_bg.jpg') }}");
+   background-size:cover;
+   background-position:center;
+   background-attachment:fixed;
+}
 
-        .role-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 15px 0;
-            font-size: 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background: var(--primary);
-            color: white;
-            transition: transform 0.2s;
-        }
+/* ===== 2‑COLUMN LAYOUT ===== */
+.layout{
+   display:flex;
+   align-items:center;
+   justify-content:space-between;
+   padding:60px;
+}
 
-        .role-btn:hover {
-            transform: scale(1.05);
-        }
+/* ===== LEFT QUOTE ===== */
+.quote-box{
+   max-width:460px;
+}
 
-        .actions {
-            margin-top: 20px;
-        }
+.quote{
+   font-size:32px;
+   font-weight:700;
+   line-height:1.3;
+}
 
-        .actions a {
-            display: inline-block;
-            margin: 8px;
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: bold;
-        }
+.sub{
+   margin-top:12px;
+   opacity:.9;
+}
 
-        .theme-btn {
-            margin-top: 20px;
-            background: none;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            padding: 6px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-    </style>
+/* ===== RIGHT ROLE PANEL ===== */
+.wrapper{
+   width:380px;
+}
+
+/* TITLE */
+.title{
+   font-size:22px;
+   font-weight:700;
+   margin-bottom:14px;
+}
+
+/* ROLE BUTTON CARDS */
+.role-card{
+   background:rgba(0,0,0,.25);
+   border:1px solid rgba(255,255,255,.35);
+   padding:16px 18px;
+   border-radius:12px;
+   margin:12px 0;
+   cursor:pointer;
+   color:white;
+   font-size:17px;
+   text-align:left;
+   transition:.25s;
+}
+
+.role-card:hover{
+   background:rgba(37,99,235,.35);
+   border-color:#60a5fa;
+   transform:translateX(6px);
+}
+
+/* remove default button look */
+button{
+   border:none;
+   background:transparent;
+   width:100%;
+}
+
+/* THEME BUTTON */
+.theme-btn{
+   margin-top:12px;
+   padding:8px 14px;
+   border-radius:8px;
+   border:1px solid rgba(255,255,255,.45);
+   background:rgba(0,0,0,.25);
+   color:white;
+   cursor:pointer;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){
+
+   .layout{
+      flex-direction:column;
+      padding:28px;
+      text-align:center;
+   }
+
+   .quote-box{
+      margin-bottom:30px;
+   }
+
+   .wrapper{
+      width:100%;
+      max-width:380px;
+   }
+}
+</style>
 </head>
 
 <body>
 
-<div class="card">
-    <h2>Select Your Role</h2>
+<div class="layout">
 
-    <!-- ROLE SELECTION -->
-    <form method="POST" action="/select_role">
-        <button class="role-btn" name="role" value="teacher">👩‍🏫 Teacher</button>
-        <button class="role-btn" name="role" value="student">🎓 Student</button>
-    </form>
+   <!-- LEFT : QUOTE -->
+   <div class="quote-box">
+      <div class="quote">
+         “Education is the most powerful tool  
+         to unlock the future.”
+      </div>
+      <div class="sub">
+         — Smart Student Performance Prediction System
+      </div>
+   </div>
 
-    <!-- LOGIN / SIGNUP -->
-    <!--<div class="actions">
-    <a href="/login/teacher">Teacher Login</a> |
-    <a href="/login/student">Student Login</a><br><br>
-    <a href="/signup/teacher">Teacher Signup</a> |
-    <a href="/signup/student">Student Signup</a>
-    </div>
--->
-    <!-- DARK MODE -->
-    <button class="theme-btn" onclick="toggleTheme()">🌙 Toggle Theme</button>
+
+   <!-- RIGHT : ROLE UI -->
+   <div class="wrapper">
+
+      <div class="title">Select Your Role</div>
+
+      <form method="POST" action="/select_role">
+
+         <button name="role" value="teacher">
+            <div class="role-card">
+               Teacher
+            </div>
+         </button>
+
+         <button name="role" value="student">
+            <div class="role-card">
+               Student
+            </div>
+         </button>
+
+      </form>
+
+      <button class="theme-btn" onclick="toggleTheme()">
+         Toggle Theme
+      </button>
+   </div>
+
 </div>
 
 <script>
-function toggleTheme() {
-    document.body.classList.toggle("dark");
-    localStorage.setItem("theme",
-        document.body.classList.contains("dark") ? "dark" : "light"
-    );
-}
-
-if (localStorage.getItem("theme") === "dark") {
-    document.body.classList.add("dark");
+function toggleTheme(){
+   document.body.classList.toggle("dark");
 }
 </script>
 
