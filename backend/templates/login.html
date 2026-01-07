@@ -1,104 +1,161 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ role|capitalize }} Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<title>{{ role|capitalize }} Login</title>
 
-    <style>
-        body {
-    background:
-        linear-gradient(rgba(37,99,235,0.7), rgba(37,99,235,0.7)),
-        url("{{ url_for('static', filename='images/login_bg.jpg') }}");
-    background-size: cover;
-    background-position: center;
+<style>
+
+:root{
+   --primary:#2563eb;
 }
 
-        .auth-bg {
-            height: 100vh;
-            background: linear-gradient(rgba(37,99,235,0.7), rgba(37,99,235,0.7)),
-        url("{{ url_for('static', filename='images/login_bg.jpg') }}");
-    background-size: cover;
-    background-position: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            
-        }
+/* ===== BACKGROUND ===== */
+body{
+   margin:0;
+   font-family:"Segoe UI", Arial;
+   color:white;
 
-        .auth-card {
-            background: #ffffff;
-            padding: 40px;
-            width: 360px;
-            border-radius: 14px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            text-align: center;
-        }
+   background:
+      linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35)),
+      url("{{ url_for('static', filename='images/login_bg.jpg') }}");
 
-        .auth-card h2 {
-            margin-bottom: 25px;
-        }
+   background-size:cover;
+   background-position:center;
+   background-attachment:fixed;
+}
 
-        .auth-card form {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
+/* student */
+body.student{
+   background:
+      linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35)),
+      url("{{ url_for('static', filename='images/student_signup.jpg') }}");
 
-        .auth-card input {
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 15px;
-        }
+   background-size:cover;
+   background-position:center;
+}
 
-        .auth-card button {
-            padding: 12px;
-            background: #2563eb;
-            color: white;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
+/* teacher */
+body.teacher{
+   background:
+      linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.35)),
+      url("{{ url_for('static', filename='images/teacher_signup.jpg') }}");
 
-        .auth-links {
-            margin-top: 18px;
-        }
+   background-size:cover;
+   background-position:center;
+}
 
-        .auth-links a {
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: bold;
-        }
 
-        .flash {
-            color: red;
-            margin-bottom: 10px;
-        }
-    </style>
+/* ===== CENTER LAYOUT ===== */
+.auth-bg{
+   min-height:100vh;
+   display:flex;
+   justify-content:center;
+   align-items:center;
+   padding:20px;
+}
+
+
+/* ===== TRANSPARENT CARD ===== */
+.auth-card{
+   background:transparent;
+   border:none;
+   text-align:center;
+   width:360px;
+}
+
+
+/* TITLE */
+.auth-card h2{
+   margin-bottom:24px;
+}
+
+
+/* FLASH MESSAGE */
+.flash{
+   color:#ffb3b3;
+   margin-bottom:10px;
+}
+
+
+/* FORM */
+.auth-card form{
+   display:flex;
+   flex-direction:column;
+   gap:14px;
+}
+
+
+/* ===== INPUT — LIKE ROLE PAGE ===== */
+.auth-card input{
+   padding:12px;
+   border:none;
+   border-bottom:1px solid white;
+   background:transparent;
+   color:white;
+   outline:none;
+   font-size:15px;
+}
+
+.auth-card input::placeholder{
+   color:#e5e5e5;
+}
+
+
+/* ===== BUTTON ===== */
+.auth-card button{
+   padding:12px;
+   background:#2563eb;
+   color:white;
+   border:none;
+   border-radius:8px;
+   cursor:pointer;
+}
+
+
+/* ===== LINKS ===== */
+.auth-links{
+   margin-top:14px;
+}
+
+.auth-links a{
+   color:white;
+   text-decoration:underline;
+}
+
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:500px){
+   .auth-card{
+      width:100%;
+      max-width:340px;
+   }
+}
+
+</style>
 </head>
 
-<body class="auth-bg">
+<body class="auth-bg {{ role }}">
 
 <div class="auth-card">
-    <h2>{{ role|capitalize }} Login</h2>
 
-    {% with messages = get_flashed_messages() %}
+   <h2>{{ role|capitalize }} Login</h2>
+
+   {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <div class="flash">{{ messages[0] }}</div>
+         <div class="flash">{{ messages[0] }}</div>
       {% endif %}
-    {% endwith %}
+   {% endwith %}
 
-    <form method="POST">
-        <input name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-    </form>
+   <form method="POST">
+      <input name="username" placeholder="Username" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <button type="submit">Login</button>
+   </form>
 
-    <div class="auth-links">
-        <a href="/signup/{{ role }}">Sign Up</a>
-    </div>
+   <div class="auth-links">
+      <a href="/signup/{{ role }}">Sign Up</a>
+   </div>
+
 </div>
 
 </body>

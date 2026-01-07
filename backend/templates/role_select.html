@@ -25,12 +25,14 @@ body{
    background-attachment:fixed;
 }
 
-/* ===== 2‑COLUMN LAYOUT ===== */
+/* ===== CENTERED 2-COLUMN LAYOUT ===== */
 .layout{
    display:flex;
-   align-items:center;
-   justify-content:space-between;
-   padding:60px;
+   align-items:center;      /* vertical center */
+   justify-content:center;  /* horizontal center */
+   gap:80px;                /* space between quote and role panel */
+   min-height:100vh;        /* take whole screen */
+   padding:0 40px;
 }
 
 /* ===== LEFT QUOTE ===== */
@@ -104,12 +106,13 @@ button{
 
    .layout{
       flex-direction:column;
-      padding:28px;
       text-align:center;
+      gap:30px;
+      padding:30px 20px;
    }
 
    .quote-box{
-      margin-bottom:30px;
+      max-width:600px;
    }
 
    .wrapper{
