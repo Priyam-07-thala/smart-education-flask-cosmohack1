@@ -213,6 +213,66 @@ def student_report(student_id):
         risk=student["risk"]
     )
 
+
+@app.route('/api/student_improvements', methods=['GET', 'POST'])
+def student_improvements():
+    """Return heuristic improvement suggestions for students.
+
+    GET: read from `students` DB table
+    POST: upload a CSV file (form file field name: 'file') to analyze
+    """
+    import pandas as pd
+
+    # load data either from uploaded file or DB
+    if request.method == 'POST' and request.files.get('file'):
+        stream = io.StringIO(request.files['file'].stream.read().decode('utf8'))
+        df = pd.read_csv(stream)
+    else:
+        conn = get_db()
+        rows = conn.execute("SELECT * FROM students").fetchall()
+        conn.close()
+        data = [dict(r) for r in rows]
+        df = pd.DataFrame(data) if data else pd.DataFrame()
+
+    if df.empty:
+        return jsonify([])
+
+    from backend.ml.preprocess import summarize_students
+    summaries = summarize_students(df)
+
+    # Optional: support a 'use_gemini' query flag to refine output via Gemini
+    use_gemini = request.args.get("use_gemini") == "1"
+    add_feedback = request.args.get("feedback") == "1"
+
+    if use_gemini:
+        try:
+            from backend.ml.gemini_client import rank_students_by_need
+            ranking_text = rank_students_by_need(summaries)
+        except Exception as e:
+            print("Gemini ranking failed:", e)
+            ranking_text = None
+    else:
+        ranking_text = None
+
+    # If feedback requested, call per-student feedback helper (mockable in tests)
+    if add_feedback:
+        try:
+            from backend.ml.gemini_client import get_student_feedback
+            for s in summaries:
+                # Map overall_risk to a numeric score for the helper (low=0.2, medium=0.45, high=0.8)
+                map_score = {"low": 0.2, "medium": 0.45, "high": 0.8}
+                score = map_score.get(s.get("overall_risk"), 0.45)
+                s["feedback"] = get_student_feedback(s.get("name"), score)
+        except Exception as e:
+            print("Gemini feedback failed:", e)
+
+    result = {"summaries": summaries}
+    if ranking_text:
+        result["ranking"] = ranking_text
+
+    return jsonify(result)
+
+
 if __name__ == "__main__":
     init_db()
     app.run()

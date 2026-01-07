@@ -63,6 +63,33 @@ This project was developed with a **24‑hour hackathon mindset**, focusing on c
 - **ML (Optional):** Scikit‑Learn (pretrained model)
 - **Version Control:** Git & GitHub
 
+## 🧠 Gemini Integration (optional)
+
+This project includes an optional layer that uses Gemini (Google Generative AI) to produce short, motivating feedback and quick rankings of which students need attention first.
+
+Quick setup:
+
+1. Install (add to your venv):
+
+   pip install google-generativeai python-dotenv
+
+2. Create a `.env` file (copy from `.env.example`) and add your API key:
+
+   GEMINI_API_KEY=your_gemini_api_key_here
+
+   Add `.env` to `.gitignore` and never commit your real key.
+
+3. Usage in this app:
+
+- GET/POST `/api/student_improvements` — returns heuristic summaries
+- POST `/api/student_improvements?feedback=1` — includes per-student short feedback
+- GET `/api/student_improvements?use_gemini=1` — returns a short ranking summary
+
+Notes:
+- The app uses a lightweight wrapper in `backend/ml/gemini_client.py`; it gracefully falls back to heuristic messages if no API key or network access is available.
+- Tests mock the Gemini calls so they run offline.
+
+
 ```
 SMART-EDUCATION-MODEL
 ├─ backend/
