@@ -72,6 +72,27 @@ body {
     margin-bottom: 30px;
 }
 
+/* UPLOAD */
+#drop-zone {
+    border: 2px dashed var(--primary);
+    padding: 30px;
+    text-align: center;
+    border-radius: 12px;
+    cursor: pointer;
+    background: #eef4ff;
+    transition: 0.3s;
+}
+
+#drop-zone.dragover {
+    background: #dbe7ff;
+}
+
+#status {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
 /* TABLE */
 table {
     width: 100%;
@@ -169,6 +190,20 @@ td {
 
 <div class="container">
 
+<!-- CSV UPLOAD SECTION -->
+<div class="card">
+    <h3>Upload Student CSV</h3>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="fileInput" name="file" accept=".csv" hidden>
+        <div id="drop-zone">
+            Drag and drop a CSV file here, or click to select
+        </div>
+        <p id="status"></p>
+    </form>
+</div>
+
+<!-- STUDENTS TABLE -->
 <div class="card">
 <h3>Students Overview</h3>
 
@@ -215,7 +250,6 @@ View Explanation
     <h3>AI-Based Student Risk Explanation</h3>
 
     <p id="riskLabel"></p>
-
     <div id="loading" class="loading">Generating explanation...</div>
 
     <ul id="explanation"></ul>
@@ -242,8 +276,10 @@ View Explanation
   </div>
 </div>
 
-<!-- ✅ CORRECT PLACE TO LINK JS -->
+<!-- JS FILES -->
+<script src="{{ url_for('static', filename='js/dragdrop.js') }}"></script>
 <script src="{{ url_for('static', filename='js/explain.js') }}"></script>
 
 </body>
 </html>
+>
