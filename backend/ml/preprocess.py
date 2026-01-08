@@ -1,3 +1,19 @@
+def get_student_by_id(student_id, df):
+    student_row = df[df["student_id"].astype(str) == str(student_id)]
+
+    if student_row.empty:
+        return None
+
+    row = student_row.iloc[0]
+
+    return {
+        "attendance": float(row["attendance"]),
+        "marks": float(row["avg_marks"]),
+        "assignments": float(row["assignment_completion"]),
+        "behavior": float(row["behavior_score"]),
+        "risk_level": row["risk_level"]
+    }
+
 import pandas as pd
 
 def assign_risk(row):

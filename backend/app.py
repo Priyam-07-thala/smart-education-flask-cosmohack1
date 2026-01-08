@@ -1,15 +1,23 @@
 from flask import Flask, render_template, request, redirect, session, flash, jsonify
 import sqlite3, csv, io
+import os
 
+# =============================
+# APP SETUP
+# =============================
 app = Flask(__name__)
 app.secret_key = "secret123"
 DB = "database.db"
 
-# ---------- DB ----------
+
+# =============================
+# DATABASE
+# =============================
 def get_db():
     conn = sqlite3.connect(DB)
     conn.row_factory = sqlite3.Row
     return conn
+
 
 def init_db():
     conn = get_db()
@@ -40,7 +48,10 @@ def init_db():
     conn.commit()
     conn.close()
 
-# ---------- RISK ----------
+
+# =============================
+# SIMPLE RISK (CSV UPLOAD ONLY)
+# =============================
 def calculate_risk(a, m, ass, b):
     score = (a + m + ass + b) / 4
     if score >= 75:
@@ -49,17 +60,32 @@ def calculate_risk(a, m, ass, b):
         return "Medium"
     return "High"
 
-# ---------- ROLE ----------
+
+# =============================
+# IMPORT ML + GEMINI (NEW)
+# =============================
+from backend.ml.train_model import predict_risk
+from backend.ml.prompt_builder import build_gemini_prompt
+from backend.ml.gemini_client import generate_explanation
+
+
+# =============================
+# ROLE SELECTION
+# =============================
 @app.route("/")
 def role_select():
     return render_template("role_select.html")
+
 
 @app.route("/select_role", methods=["POST"])
 def select_role():
     session["role"] = request.form["role"]
     return redirect(f"/login/{session['role']}")
 
-# ---------- LOGIN ----------
+
+# =============================
+# LOGIN
+# =============================
 @app.route("/login/<role>", methods=["GET", "POST"])
 def login(role):
     if request.method == "POST":
@@ -82,13 +108,19 @@ def login(role):
 
     return render_template("login.html", role=role)
 
-# ---------- LOGOUT ----------
+
+# =============================
+# LOGOUT
+# =============================
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
-# ---------- SIGNUP ----------
+
+# =============================
+# SIGNUP
+# =============================
 @app.route("/signup/<role>", methods=["GET", "POST"])
 def signup(role):
     if request.method == "POST":
@@ -113,7 +145,10 @@ def signup(role):
 
     return render_template("signup.html", role=role)
 
-# ---------- TEACHER ----------
+
+# =============================
+# TEACHER DASHBOARD
+# =============================
 @app.route("/teacher")
 def teacher_dashboard():
     if session.get("role") != "teacher":
@@ -125,7 +160,10 @@ def teacher_dashboard():
 
     return render_template("teacher_dashboard.html", students=students)
 
-# ---------- UPLOAD ----------
+
+# =============================
+# CSV UPLOAD
+# =============================
 @app.route("/upload_csv", methods=["POST"])
 def upload_csv():
     if session.get("role") != "teacher":
@@ -159,7 +197,10 @@ def upload_csv():
 
     return jsonify({"success": True})
 
-# ---------- STUDENT ----------
+
+# =============================
+# STUDENT DASHBOARD
+# =============================
 @app.route("/student")
 def student_dashboard():
     if session.get("role") != "student":
@@ -186,7 +227,10 @@ def student_dashboard():
         risk=s["risk"]
     )
 
-# ---------- STUDENT REPORT ----------
+
+# =============================
+# STUDENT REPORT (TEACHER)
+# =============================
 @app.route("/student_report/<student_id>")
 def student_report(student_id):
     if session.get("role") != "teacher":
@@ -214,68 +258,51 @@ def student_report(student_id):
     )
 
 
-@app.route('/api/student_improvements', methods=['GET', 'POST'])
-def student_improvements():
-    """Return heuristic improvement suggestions for students.
+# =============================
+# 🧠 EXPLAINABLE AI (NEW)
+# =============================
+@app.route("/explain/<student_id>")
+def explain_student(student_id):
+    if session.get("role") != "teacher":
+        return jsonify({"error": "Unauthorized"}), 403
 
-    GET: read from `students` DB table
-    POST: upload a CSV file (form file field name: 'file') to analyze
-    """
-    import pandas as pd
+    conn = get_db()
+    student = conn.execute(
+        "SELECT * FROM students WHERE student_id=?",
+        (student_id,)
+    ).fetchone()
+    conn.close()
 
-    # load data either from uploaded file or DB
-    if request.method == 'POST' and request.files.get('file'):
-        stream = io.StringIO(request.files['file'].stream.read().decode('utf8'))
-        df = pd.read_csv(stream)
-    else:
-        conn = get_db()
-        rows = conn.execute("SELECT * FROM students").fetchall()
-        conn.close()
-        data = [dict(r) for r in rows]
-        df = pd.DataFrame(data) if data else pd.DataFrame()
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
 
-    if df.empty:
-        return jsonify([])
+    student_data = {
+        "attendance": student["attendance"],
+        "marks": student["avg_marks"],
+        "assignments": student["assignment_completion"],
+        "behavior": student["behavior_score"]
+    }
 
-    from backend.ml.preprocess import summarize_students
-    summaries = summarize_students(df)
+    # ML prediction
+    risk = predict_risk(student_data)
 
-    # Optional: support a 'use_gemini' query flag to refine output via Gemini
-    use_gemini = request.args.get("use_gemini") == "1"
-    add_feedback = request.args.get("feedback") == "1"
+    # Gemini explanation
+    prompt = build_gemini_prompt(student_data, risk)
+    explanation = generate_explanation(prompt)
 
-    if use_gemini:
-        try:
-            from backend.ml.gemini_client import rank_students_by_need
-            ranking_text = rank_students_by_need(summaries)
-        except Exception as e:
-            print("Gemini ranking failed:", e)
-            ranking_text = None
-    else:
-        ranking_text = None
-
-    # If feedback requested, call per-student feedback helper (mockable in tests)
-    if add_feedback:
-        try:
-            from backend.ml.gemini_client import get_student_feedback
-            for s in summaries:
-                # Map overall_risk to a numeric score for the helper (low=0.2, medium=0.45, high=0.8)
-                map_score = {"low": 0.2, "medium": 0.45, "high": 0.8}
-                score = map_score.get(s.get("overall_risk"), 0.45)
-                s["feedback"] = get_student_feedback(s.get("name"), score)
-        except Exception as e:
-            print("Gemini feedback failed:", e)
-
-    result = {"summaries": summaries}
-    if ranking_text:
-        result["ranking"] = ranking_text
-
-    return jsonify(result)
+    return jsonify({
+        "risk": risk,
+        **explanation,
+        "note": "This explanation is generated using Google Gemini to support teacher decision-making."
+    })
 
 
+# =============================
+# MAIN
+# =============================
 if __name__ == "__main__":
     init_db()
-    app.run()
+    app.run(debug=True)
 
 
 

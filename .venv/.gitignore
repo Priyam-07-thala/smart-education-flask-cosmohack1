@@ -1,9 +1,2 @@
-# Python virtual environment
-.venv/
-
-# Database (recommended)
-backend/database.db
-
-# Python cache
-__pycache__/
-*.pyc
+# Created by venv; see https://docs.python.org/3/library/venv.html
+*
