@@ -1,38 +1,48 @@
-function explainStudent(studentId) {
+function openExplain(studentId) {
+    // Show modal
+    document.getElementById("explainModal").style.display = "block";
+
+    // Reset UI
+    document.getElementById("explanation").innerHTML = "";
+    document.getElementById("positives").innerHTML = "";
+    document.getElementById("risks").innerHTML = "";
+    document.getElementById("actions").innerHTML = "";
+    document.getElementById("confidenceFill").style.width = "0%";
+
     fetch(`/explain/${studentId}`)
         .then(res => res.json())
         .then(data => {
-            console.log("Explanation API response:", data);
-
             if (!data.success) {
-                throw new Error("API returned failure");
+                document.getElementById("explanation").innerHTML =
+                    "<li>Failed to load explanation</li>";
+                return;
             }
 
-            document.getElementById("ai-explanation").innerHTML =
-                data.explanation.map(e => `<li>${e}</li>`).join("");
+            data.explanation.forEach(e =>
+                document.getElementById("explanation").innerHTML += `<li>${e}</li>`
+            );
 
-            document.getElementById("positive-factors").innerHTML =
-                data.positive_factors.map(e => `<li>${e}</li>`).join("");
+            data.positive_factors.forEach(e =>
+                document.getElementById("positives").innerHTML += `<li>${e}</li>`
+            );
 
-            document.getElementById("risk-factors").innerHTML =
-                data.risk_factors.map(e => `<li>${e}</li>`).join("");
+            data.risk_factors.forEach(e =>
+                document.getElementById("risks").innerHTML += `<li>${e}</li>`
+            );
 
-            document.getElementById("suggested-actions").innerHTML =
-                data.suggested_actions.map(e => `<li>${e}</li>`).join("");
+            data.suggested_actions.forEach(e =>
+                document.getElementById("actions").innerHTML += `<li>${e}</li>`
+            );
 
-            const confidence = data.confidence || 60;
-            document.getElementById("confidence-bar").style.width = confidence + "%";
-            document.getElementById("confidence-text").innerText = confidence + "%";
-
-            document.getElementById("explanationModal").style.display = "block";
+            document.getElementById("confidenceFill").style.width =
+                data.confidence + "%";
         })
-        .catch(err => {
-            console.error("Explanation error:", err);
-            document.getElementById("ai-explanation").innerHTML =
-                "<li>Failed to load explanation.</li>";
+        .catch(() => {
+            document.getElementById("explanation").innerHTML =
+                "<li>Error loading explanation</li>";
         });
 }
 
-function closeExplanation() {
-    document.getElementById("explanationModal").style.display = "none";
+function closeExplain() {
+    document.getElementById("explainModal").style.display = "none";
 }

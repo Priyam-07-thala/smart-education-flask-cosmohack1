@@ -290,7 +290,7 @@ def student_report(student_id):
 @app.route("/explain/<student_id>")
 def explain_student(student_id):
     if session.get("role") != "teacher":
-        return jsonify({"success": False, "error": "Unauthorized"}), 401
+        return jsonify({"success": False}), 403
 
     with get_db() as conn:
         student = conn.execute(
@@ -299,7 +299,7 @@ def explain_student(student_id):
         ).fetchone()
 
     if not student:
-        return jsonify({"success": False, "error": "Student not found"}), 404
+        return jsonify({"success": False}), 404
 
     student_data = {
         "attendance": student["attendance"],
@@ -307,6 +307,12 @@ def explain_student(student_id):
         "assignments": student["assignment_completion"],
         "behavior": student["behavior_score"]
     }
+
+    risk = student["risk"]
+
+    explanation = generate_explanation(student_data, risk)
+    return jsonify(explanation)
+
 
     # ✅ USE STORED RISK (NO ML CALL)
     risk = student["risk"]
