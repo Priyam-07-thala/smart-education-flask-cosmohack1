@@ -1,68 +1,57 @@
 from flask import Flask, render_template, request, redirect, session, flash, jsonify
-import sqlite3, csv, io
-import os
+import sqlite3, csv, io, os
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # =============================
 # APP SETUP
 # =============================
 app = Flask(__name__)
-app.secret_key = "secret123"
+app.secret_key = os.getenv("SECRET_KEY", "dev_fallback_key")
 DB = "database.db"
 
 
 # =============================
-# DATABASE
+# DATABASE HELPERS
 # =============================
 def get_db():
-    conn = sqlite3.connect(DB)
+    conn = sqlite3.connect(
+        DB,
+        timeout=10,
+        check_same_thread=False
+    )
     conn.row_factory = sqlite3.Row
     return conn
 
 
 def init_db():
-    conn = get_db()
-    cur = conn.cursor()
+    with get_db() as conn:
+        conn.execute("PRAGMA journal_mode=WAL;")
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        password TEXT,
-        role TEXT,
-        student_id TEXT
-    )
-    """)
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT,
+            role TEXT,
+            student_id TEXT
+        )
+        """)
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS students (
-        student_id TEXT PRIMARY KEY,
-        name TEXT,
-        attendance REAL,
-        avg_marks REAL,
-        assignment_completion REAL,
-        behavior_score REAL,
-        risk TEXT
-    )
-    """)
-
-    conn.commit()
-    conn.close()
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS students (
+            student_id TEXT PRIMARY KEY,
+            name TEXT,
+            attendance REAL,
+            avg_marks REAL,
+            assignment_completion REAL,
+            behavior_score REAL,
+            risk TEXT
+        )
+        """)
 
 
 # =============================
-# SIMPLE RISK (CSV UPLOAD ONLY)
-# =============================
-def calculate_risk(a, m, ass, b):
-    score = (a + m + ass + b) / 4
-    if score >= 75:
-        return "Low"
-    elif score >= 50:
-        return "Medium"
-    return "High"
-
-
-# =============================
-# IMPORT ML + GEMINI (NEW)
+# IMPORT ML + GEMINI
 # =============================
 from backend.ml.train_model import predict_risk
 from backend.ml.prompt_builder import build_gemini_prompt
@@ -92,14 +81,13 @@ def login(role):
         u = request.form["username"]
         p = request.form["password"]
 
-        conn = get_db()
-        user = conn.execute(
-            "SELECT * FROM users WHERE username=? AND password=? AND role=?",
-            (u, p, role)
-        ).fetchone()
-        conn.close()
+        with get_db() as conn:
+            user = conn.execute(
+                "SELECT * FROM users WHERE username=? AND role=?",
+                (u, role)
+            ).fetchone()
 
-        if user:
+        if user and check_password_hash(user["password"], p):
             session["role"] = role
             session["student_id"] = user["student_id"]
             return redirect("/teacher" if role == "teacher" else "/student")
@@ -128,14 +116,14 @@ def signup(role):
         p = request.form["password"]
         sid = request.form.get("student_id")
 
+        hashed = generate_password_hash(p)
+
         try:
-            conn = get_db()
-            conn.execute(
-                "INSERT INTO users (username, password, role, student_id) VALUES (?, ?, ?, ?)",
-                (u, p, role, sid if role == "student" else None)
-            )
-            conn.commit()
-            conn.close()
+            with get_db() as conn:
+                conn.execute(
+                    "INSERT INTO users (username, password, role, student_id) VALUES (?, ?, ?, ?)",
+                    (u, hashed, role, sid if role == "student" else None)
+                )
 
             flash("Signup successful. Please login.")
             return redirect(f"/login/{role}")
@@ -154,48 +142,80 @@ def teacher_dashboard():
     if session.get("role") != "teacher":
         return redirect("/")
 
-    conn = get_db()
-    students = conn.execute("SELECT * FROM students").fetchall()
-    conn.close()
+    with get_db() as conn:
+        students = conn.execute("SELECT * FROM students").fetchall()
 
     return render_template("teacher_dashboard.html", students=students)
 
 
 # =============================
-# CSV UPLOAD
+# CSV UPLOAD  ✅ FULLY FIXED
 # =============================
 @app.route("/upload_csv", methods=["POST"])
 def upload_csv():
     if session.get("role") != "teacher":
-        return jsonify({"error": "Unauthorized"}), 403
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
 
     file = request.files.get("file")
     if not file:
-        return jsonify({"error": "No file uploaded"}), 400
+        return jsonify({"success": False, "error": "No file uploaded"}), 400
 
-    stream = io.StringIO(file.stream.read().decode("utf8"))
-    reader = csv.DictReader(stream)
+    try:
+        stream = io.StringIO(file.stream.read().decode("utf-8", errors="ignore"))
+        reader = csv.DictReader(stream)
 
-    conn = get_db()
-    cur = conn.cursor()
+        required_fields = [
+            "student_id", "name",
+            "attendance", "avg_marks",
+            "assignment_completion", "behavior_score"
+        ]
 
-    for r in reader:
-        a = float(r["attendance"])
-        m = float(r["avg_marks"])
-        ass = float(r["assignment_completion"])
-        b = float(r["behavior_score"])
+        with get_db() as conn:
+            cur = conn.cursor()
 
-        risk = calculate_risk(a, m, ass, b)
+            for r in reader:
+                if not all(field in r and r[field] for field in required_fields):
+                    continue
 
-        cur.execute("""
-        INSERT OR REPLACE INTO students
-        VALUES (?,?,?,?,?,?,?)
-        """, (r["student_id"], r["name"], a, m, ass, b, risk))
+                a = float(r["attendance"].strip())
+                m = float(r["avg_marks"].strip())
+                ass = float(r["assignment_completion"].strip())
+                b = float(r["behavior_score"].strip())
 
-    conn.commit()
-    conn.close()
+                student_data = {
+                    "attendance": a,
+                    "marks": m,
+                    "assignments": ass,
+                    "behavior": b
+                }
 
-    return jsonify({"success": True})
+                # ✅ SAFE ML CALL
+                try:
+                    risk = predict_risk(student_data)
+                except Exception as e:
+                    print("ML error, using fallback:", e)
+                    avg = (a + m + ass + b * 10) / 4
+                    if avg >= 75:
+                        risk = "Low"
+                    elif avg >= 50:
+                        risk = "Medium"
+                    else:
+                        risk = "High"
+
+                cur.execute("""
+                INSERT OR REPLACE INTO students
+                VALUES (?,?,?,?,?,?,?)
+                """, (r["student_id"], r["name"], a, m, ass, b, risk))
+
+        return jsonify({"success": True})
+
+    except Exception as e:
+        print("CSV upload error:", e)
+        return jsonify({
+            "success": False,
+            "error": "Server error while processing CSV"
+        }), 500
+
 
 
 # =============================
@@ -206,12 +226,15 @@ def student_dashboard():
     if session.get("role") != "student":
         return redirect("/")
 
-    conn = get_db()
-    s = conn.execute(
-        "SELECT * FROM students WHERE student_id=?",
-        (session["student_id"],)
-    ).fetchone()
-    conn.close()
+    with get_db() as conn:
+        s = conn.execute(
+            "SELECT * FROM students WHERE student_id=?",
+            (session["student_id"],)
+        ).fetchone()
+
+    if not s:
+        flash("Performance data not uploaded yet.")
+        return render_template("student_dashboard.html", student=None)
 
     chart_data = {
         "attendance": s["attendance"],
@@ -229,19 +252,22 @@ def student_dashboard():
 
 
 # =============================
-# STUDENT REPORT (TEACHER)
+# STUDENT REPORT
 # =============================
 @app.route("/student_report/<student_id>")
 def student_report(student_id):
     if session.get("role") != "teacher":
         return redirect("/")
 
-    conn = get_db()
-    student = conn.execute(
-        "SELECT * FROM students WHERE student_id=?",
-        (student_id,)
-    ).fetchone()
-    conn.close()
+    with get_db() as conn:
+        student = conn.execute(
+            "SELECT * FROM students WHERE student_id=?",
+            (student_id,)
+        ).fetchone()
+
+    if not student:
+        flash("Student not found")
+        return redirect("/teacher")
 
     chart_data = {
         "attendance": student["attendance"],
@@ -259,22 +285,21 @@ def student_report(student_id):
 
 
 # =============================
-# 🧠 EXPLAINABLE AI (NEW)
+# EXPLAINABLE AI
 # =============================
 @app.route("/explain/<student_id>")
 def explain_student(student_id):
     if session.get("role") != "teacher":
-        return jsonify({"error": "Unauthorized"}), 403
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
 
-    conn = get_db()
-    student = conn.execute(
-        "SELECT * FROM students WHERE student_id=?",
-        (student_id,)
-    ).fetchone()
-    conn.close()
+    with get_db() as conn:
+        student = conn.execute(
+            "SELECT * FROM students WHERE student_id=?",
+            (student_id,)
+        ).fetchone()
 
     if not student:
-        return jsonify({"error": "Student not found"}), 404
+        return jsonify({"success": False, "error": "Student not found"}), 404
 
     student_data = {
         "attendance": student["attendance"],
@@ -283,17 +308,15 @@ def explain_student(student_id):
         "behavior": student["behavior_score"]
     }
 
-    # ML prediction
-    risk = predict_risk(student_data)
+    # ✅ USE STORED RISK (NO ML CALL)
+    risk = student["risk"]
 
-    # Gemini explanation
     prompt = build_gemini_prompt(student_data, risk)
     explanation = generate_explanation(prompt)
 
     return jsonify({
-        "risk": risk,
-        **explanation,
-        "note": "This explanation is generated using Google Gemini to support teacher decision-making."
+        "success": True,
+        **explanation
     })
 
 
@@ -302,7 +325,4 @@ def explain_student(student_id):
 # =============================
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True)
-
-
-
+    app.run(debug=True, use_reloader=False)

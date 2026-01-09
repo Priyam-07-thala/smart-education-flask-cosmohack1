@@ -29,28 +29,44 @@ fileInput.addEventListener("change", () => {
 });
 
 function uploadFile(file) {
-    if (!file || !file.name.endsWith(".csv")) {
-        statusText.innerText = "❌ Please upload a valid CSV";
+    if (!file || !file.name.toLowerCase().endsWith(".csv")) {
+        statusText.innerText = "❌ Please upload a valid CSV file";
         return;
     }
 
     const formData = new FormData();
     formData.append("file", file);
 
+    statusText.innerText = "⏳ Uploading...";
+
     fetch("/upload_csv", {
         method: "POST",
         body: formData
     })
-    .then(res => res.json())
+    .then(async res => {
+        let data;
+        try {
+            data = await res.json();
+        } catch {
+            throw new Error("Invalid server response");
+        }
+
+        if (!res.ok) {
+            throw new Error(data.error || "Upload failed");
+        }
+
+        return data;
+    })
     .then(data => {
         if (data.success) {
             statusText.innerText = "✅ CSV uploaded successfully!";
             setTimeout(() => location.reload(), 800);
         } else {
-            statusText.innerText = data.error;
+            statusText.innerText = "❌ " + (data.error || "Upload failed");
         }
     })
-    .catch(() => {
-        statusText.innerText = "❌ Upload failed";
+    .catch(err => {
+        statusText.innerText = "❌ " + err.message;
+        console.error("Upload error:", err);
     });
 }
