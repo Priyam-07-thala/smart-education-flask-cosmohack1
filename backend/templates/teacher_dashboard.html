@@ -1,287 +1,317 @@
 <!DOCTYPE html>
-{% set high_risk_count = students | selectattr(6, 'equalto', 'High') | list | length %}
+{% set high_risk_count = students | selectattr(6, 'equalto', 'High') | list |
+length %}
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Teacher Dashboard</title>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Teacher Dashboard</title>
 
-<style>
-:root {
-    --bg: #f4f6fb;
-    --card: #ffffff;
-    --text: #111;
-    --primary: #2563eb;
-    --danger: #dc2626;
-    --warning: #f59e0b;
-    --success: #16a34a;
-}
+    <style>
+      :root {
+        --bg: #f4f6fb;
+        --card: #ffffff;
+        --text: #111;
+        --primary: #2563eb;
+        --danger: #dc2626;
+        --warning: #f59e0b;
+        --success: #16a34a;
+      }
 
-body.dark {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --text: #ffffff;
-    --primary: #38bdf8;
-}
+      body.dark {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --text: #ffffff;
+        --primary: #38bdf8;
+      }
 
-body {
-    margin: 0;
-    font-family: "Segoe UI", sans-serif;
-    background:
-        linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)),
-        url("{{ url_for('static', filename='images/teacher_bg.jpg') }}");
-    background-size: cover;
-    background-attachment: fixed;
-    color: var(--text);
-}
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)),
+          url("{{ url_for('static', filename='images/teacher_bg.jpg') }}");
+        background-size: cover;
+        background-attachment: fixed;
+        color: var(--text);
+      }
 
-/* NAVBAR */
-.navbar {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background: var(--primary);
-    color: white;
-    padding: 15px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+      /* NAVBAR */
+      .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: var(--primary);
+        color: white;
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-.nav-actions button,
-.nav-actions a {
-    margin-left: 10px;
-    padding: 7px 14px;
-    border: none;
-    cursor: pointer;
-    background: white;
-    color: var(--primary);
-    border-radius: 6px;
-    font-weight: bold;
-}
+      .nav-actions button,
+      .nav-actions a {
+        margin-left: 10px;
+        padding: 7px 14px;
+        border: none;
+        cursor: pointer;
+        background: white;
+        color: var(--primary);
+        border-radius: 6px;
+        font-weight: bold;
+      }
 
-/* LAYOUT */
-.container {
-    max-width: 1200px;
-    margin: 30px auto;
-}
+      /* LAYOUT */
+      .container {
+        max-width: 1200px;
+        margin: 30px auto;
+      }
 
-.card {
-    background: rgba(255,255,255,0.95);
-    padding: 25px;
-    border-radius: 14px;
-    margin-bottom: 30px;
-}
+      .card {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 25px;
+        border-radius: 14px;
+        margin-bottom: 30px;
+      }
 
-/* UPLOAD */
-#drop-zone {
-    border: 2px dashed var(--primary);
-    padding: 30px;
-    text-align: center;
-    border-radius: 12px;
-    cursor: pointer;
-    background: #eef4ff;
-    transition: 0.3s;
-}
+      /* UPLOAD */
+      #drop-zone {
+        border: 2px dashed var(--primary);
+        padding: 30px;
+        text-align: center;
+        border-radius: 12px;
+        cursor: pointer;
+        background: #eef4ff;
+        transition: 0.3s;
+      }
 
-#drop-zone.dragover {
-    background: #dbe7ff;
-}
+      #drop-zone.dragover {
+        background: #dbe7ff;
+      }
 
-#status {
-    text-align: center;
-    margin-top: 10px;
-    font-weight: bold;
-}
+      #status {
+        text-align: center;
+        margin-top: 10px;
+        font-weight: bold;
+      }
 
-/* TABLE */
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
+      /* TABLE */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
 
-th {
-    background: var(--primary);
-    color: white;
-    padding: 12px;
-}
+      th {
+        background: var(--primary);
+        color: white;
+        padding: 12px;
+      }
 
-td {
-    padding: 12px;
-    border-bottom: 1px solid #ddd;
-}
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+      }
 
-/* BADGES */
-.badge {
-    padding: 6px 12px;
-    border-radius: 20px;
-    color: white;
-    font-weight: bold;
-}
+      /* BADGES */
+      .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        color: white;
+        font-weight: bold;
+      }
 
-.low { background: var(--success); }
-.medium { background: var(--warning); }
-.high { background: var(--danger); }
+      .low {
+        background: var(--success);
+      }
+      .medium {
+        background: var(--warning);
+      }
+      .high {
+        background: var(--danger);
+      }
 
-/* EXPLAIN BUTTON */
-.explain-btn {
-    background: #111827;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-size: 13px;
-}
+      /* EXPLAIN BUTTON */
+      .explain-btn {
+        background: #111827;
+        color: white;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+      }
 
-/* MODAL */
-#explainModal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 2000;
-}
+      /* MODAL */
+      #explainModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 2000;
+      }
 
-.modal-box {
-    background: white;
-    max-width: 700px;
-    margin: 60px auto;
-    padding: 25px;
-    border-radius: 14px;
-}
+      .modal-box {
+        background: white;
+        max-width: 700px;
+        margin: 60px auto;
+        padding: 25px;
+        border-radius: 14px;
+      }
 
-.green li { color: var(--success); }
-.red li { color: var(--danger); }
+      .green li {
+        color: var(--success);
+      }
+      .red li {
+        color: var(--danger);
+      }
 
-.confidence-bar {
-    background: #eee;
-    height: 10px;
-    border-radius: 6px;
-    overflow: hidden;
-}
+      .confidence-bar {
+        background: #eee;
+        height: 10px;
+        border-radius: 6px;
+        overflow: hidden;
+      }
 
-#confidenceFill {
-    height: 10px;
-    width: 0;
-    background: linear-gradient(to right, #f59e0b, #16a34a);
-}
+      #confidenceFill {
+        height: 10px;
+        width: 0;
+        background: linear-gradient(to right, #f59e0b, #16a34a);
+      }
 
-.loading {
-    text-align: center;
-    font-weight: bold;
-}
-</style>
-</head>
+      .loading {
+        text-align: center;
+        font-weight: bold;
+      }
+    </style>
+  </head>
 
-<body>
-
-<div class="navbar">
-    <h2>Smart Education — Teacher Dashboard</h2>
-    <div class="nav-actions">
+  <body>
+    <div class="navbar">
+      <h2>Smart Education — Teacher Dashboard</h2>
+      <div class="nav-actions">
         {% if high_risk_count > 0 %}
-        <button style="background:#dc2626;color:white;">
-            High Risk Students ({{ high_risk_count }})
+        <button
+          style="background: #dc2626; color: white"
+          onclick="showHighRisk()"
+        >
+          High Risk Students ({{ high_risk_count }})
         </button>
+        <button onclick="showAll()">Show All</button>
         {% endif %}
         <button onclick="toggleTheme()">Theme</button>
         <a href="/logout">Logout</a>
+      </div>
     </div>
-</div>
 
-<div class="container">
+    <div class="container">
+      <!-- CSV UPLOAD SECTION -->
+      <div class="card">
+        <h3>Upload Student CSV</h3>
 
-<!-- CSV UPLOAD SECTION -->
-<div class="card">
-    <h3>Upload Student CSV</h3>
-
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" id="fileInput" name="file" accept=".csv" hidden>
-        <div id="drop-zone">
+        <form id="uploadForm" enctype="multipart/form-data">
+          <input type="file" id="fileInput" name="file" accept=".csv" hidden />
+          <div id="drop-zone">
             Drag and drop a CSV file here, or click to select
-        </div>
-        <p id="status"></p>
-    </form>
-</div>
+          </div>
+          <p id="status"></p>
+        </form>
+      </div>
 
-<!-- STUDENTS TABLE -->
-<div class="card">
-<h3>Students Overview</h3>
+      <!-- STUDENTS TABLE -->
+      <div class="card">
+        <h3>Students Overview</h3>
 
-<table>
-<tr>
-<th>ID</th>
-<th>Name</th>
-<th>Attendance</th>
-<th>Marks</th>
-<th>Assignments</th>
-<th>Behavior</th>
-<th>Risk</th>
-<th>Explanation</th>
-</tr>
+        <table>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Attendance</th>
+            <th>Marks</th>
+            <th>Assignments</th>
+            <th>Behavior</th>
+            <th>Risk</th>
+            <th>Explanation</th>
+          </tr>
 
-{% for s in students %}
-<tr>
-<td>{{ s[0] }}</td>
-<td>{{ s[1] }}</td>
-<td>{{ s[2] }}%</td>
-<td>{{ s[3] }}%</td>
-<td>{{ s[4] }}%</td>
-<td>{{ s[5] }}</td>
-<td>
-<span class="badge {% if s[6]=='Low' %}low{% elif s[6]=='Medium' %}medium{% else %}high{% endif %}">
-{{ s[6] }}
-</span>
-</td>
-<td>
-<button class="explain-btn" onclick="openExplain('{{ s[0] }}')">
-    View Explanation
-</button>
-
-
-</td>
-</tr>
-{% endfor %}
-</table>
-</div>
-
-</div>
-
-<!-- EXPLANATION MODAL -->
-<div id="explainModal">
-  <div class="modal-box">
-    <h3>AI-Based Student Risk Explanation</h3>
-
-    <p id="riskLabel"></p>
-    <div id="loading" class="loading">Generating explanation...</div>
-
-    <ul id="explanation"></ul>
-
-    <h4>Positive Factors</h4>
-    <ul id="positives" class="green"></ul>
-
-    <h4>Risk Factors</h4>
-    <ul id="risks" class="red"></ul>
-
-    <h4>Suggested Actions</h4>
-    <ul id="actions"></ul>
-
-    <p><b>Confidence Level</b></p>
-    <div class="confidence-bar">
-      <div id="confidenceFill"></div>
+          {% for s in students %}
+          <tr class="student-row" data-risk="{{ s[6] }}">
+            <td>{{ s[0] }}</td>
+            <td>{{ s[1] }}</td>
+            <td>{{ s[2] }}%</td>
+            <td>{{ s[3] }}%</td>
+            <td>{{ s[4] }}%</td>
+            <td>{{ s[5] }}</td>
+            <td>
+              <span
+                class="badge {% if s[6]=='Low' %}low{% elif s[6]=='Medium' %}medium{% else %}high{% endif %}"
+              >
+                {{ s[6] }}
+              </span>
+            </td>
+            <td>
+              <button class="explain-btn" onclick="openExplain('{{ s[0] }}')">
+                View Explanation
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
     </div>
 
-    <p style="font-size:13px;margin-top:15px;">
-      This explanation is generated using Google Gemini to support teacher decision-making.
-    </p>
+    <!-- EXPLANATION MODAL -->
+    <div id="explainModal">
+      <div class="modal-box">
+        <h3>AI-Based Student Risk Explanation</h3>
 
-    <button onclick="closeExplain()">Close</button>
-  </div>
-</div>
+        <p id="riskLabel"></p>
+        <div id="loading" class="loading">Generating explanation...</div>
 
-<!-- JS FILES -->
-<script src="{{ url_for('static', filename='js/dragdrop.js') }}"></script>
-<script src="{{ url_for('static', filename='js/explain.js') }}"></script>
+        <ul id="explanation"></ul>
 
-</body>
+        <h4>Positive Factors</h4>
+        <ul id="positives" class="green"></ul>
+
+        <h4>Risk Factors</h4>
+        <ul id="risks" class="red"></ul>
+
+        <h4>Suggested Actions</h4>
+        <ul id="actions"></ul>
+
+        <p><b>Confidence Level</b></p>
+        <div class="confidence-bar">
+          <div id="confidenceFill"></div>
+        </div>
+
+        <p style="font-size: 13px; margin-top: 15px">
+          This explanation is generated using Google Gemini to support teacher
+          decision-making.
+        </p>
+
+        <button onclick="closeExplain()">Close</button>
+      </div>
+    </div>
+
+    <!-- JS FILES -->
+    <script src="{{ url_for('static', filename='js/dragdrop.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/explain.js') }}"></script>
+    <script>
+      function showHighRisk() {
+        const rows = document.querySelectorAll(".student-row");
+        rows.forEach((row) => {
+          if (row.dataset.risk === "High") {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
+      }
+
+      function showAll() {
+        const rows = document.querySelectorAll(".student-row");
+        rows.forEach((row) => {
+          row.style.display = "";
+        });
+      }
+    </script>
+  </body>
 </html>
 >
